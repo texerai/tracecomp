@@ -38,8 +38,18 @@ print(len(content))
 log_data = []
 for line in content:
     line_split = line.split()
+    log = {}
     if "tval" in line:
-        continue  # skip lines with tval
+        log = {
+            "pc": line_split[3],
+            "instruction": "0x00000013",
+            "register": None,
+            "value": None,
+            "mem": None,
+            "mem_value": None
+        }
+        log_data.append(log)
+        continue
     log = {
         "pc": line_split[3],
         "instruction": line_split[4][1:-1]
@@ -62,6 +72,25 @@ for line in content:
         log["mem"] = None
         log["mem_value"] = None
     log_data.append(log)
-
+start = 0
+count = 0
+for log in log_data:
+    if log["instruction"] == "0xf1402573":
+        start = 1
+    if log["instruction"] == "0x00200193":
+        start = 0
+        break
+    if start:
+        log = {
+            "pc": log["pc"],
+            "instruction": "0x00000013",
+            "register": None,
+            "value": None,
+            "mem": None,
+            "mem_value": None
+        }
+        count += 1
+    
 print(len(log_data))
 print(log_data[-1])
+print(count)
