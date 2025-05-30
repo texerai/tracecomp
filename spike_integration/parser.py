@@ -2,7 +2,7 @@ import pexpect
 
 log_file = open("spike_output.txt", "wb")
 pk = '/opt/homebrew/riscv64-unknown-elf/bin/pk'
-file = '/Users/sayat/Documents/GitHub/tracecomp/riscv/test/tests/bin/riscv-tests/rv64ui-p-add'
+file = '/Users/sayat/Documents/GitHub/tracecomp/riscv/test/tests/bin/riscv-tests/rv64ui-p-addi'
 cmd = "spike -d --log-commits " + " 2> trace.log" + " " + file
 child = pexpect.spawn("/bin/sh", ["-c", cmd])
 
@@ -44,11 +44,18 @@ for line in content:
     else:
         log["register"] = None
         log["value"] = None
-    if len(line_split) > 8:
-        log["mem"] = line_split[8]
+    if "mem" in line:
+        if len(line_split) > 8:
+            log["mem"] = line_split[8] #load
+        else:
+            log["mem"] = line_split[6]
+            log["mem_value"] = line_split[7]  # store
+            log["register"] = None
+            log["value"] = None
     else:
         log["mem"] = None
+        log["mem_value"] = None
     log_data.append(log)
 
 print(len(log_data))
-print(log_data[-10])
+print(log_data[-1])
