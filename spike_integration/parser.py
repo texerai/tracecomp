@@ -2,7 +2,7 @@ import pexpect
 
 log_file = open("spike_output.txt", "wb")
 pk = '/opt/homebrew/riscv64-unknown-elf/bin/pk'
-file = '/Users/sayat/Documents/GitHub/tracecomp/riscv/test/tests/bin/riscv-tests/rv64ui-p-addi'
+file = '/Users/sayat/Documents/GitHub/tracecomp/riscv/test/tests/bin/riscv-tests/rv64ui-p-add'
 cmd = "spike -d --log-commits " + " 2> trace.log" + " " + file
 child = pexpect.spawn("/bin/sh", ["-c", cmd])
 
@@ -17,15 +17,23 @@ with open("trace.log", "r") as f:
     log_contents = f.read()
 content = []
 pass_next = 0
+not_pass = 0
 for line in log_contents.splitlines():
-    if "(spike)" in line or ">>>>" in line or "exception" in line or pass_next: # ignore the interactive traces
-        if pass_next:
-            pass_next = 0
-        if ">>>>" in line:
-            pass_next = 1
-        continue
+    if "xrv64i2p1_m2p0_a2p1_f2p2_d2p2_zicsr2p0_zifencei2p0_zmmul1p0" in line:
+        not_pass = 1
+    if "ecall" in line:
+        not_pass = 0
+    if not_pass:
+        if "(spike)" in line or ">>>>" in line or "exception" in line or pass_next: # ignore the interactive traces
+            if pass_next:
+                pass_next = 0
+            if ">>>>" in line:
+                pass_next = 1
+            continue
+        else:
+            content.append(line)
     else:
-        content.append(line)
+        continue
 print(len(content))
 log_data = []
 for line in content:
@@ -33,8 +41,6 @@ for line in content:
     if "tval" in line:
         continue  # skip lines with tval
     log = {
-        "core": line_split[1][0],
-        "something": line_split[2],
         "pc": line_split[3],
         "instruction": line_split[4][1:-1]
     }
